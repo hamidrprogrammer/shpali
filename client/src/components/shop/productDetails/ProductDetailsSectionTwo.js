@@ -1,40 +1,46 @@
 import React, { Fragment, useContext, useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import AllReviews from "./AllReviews";
 import ReviewForm from "./ReviewForm";
 
 import { ProductDetailsContext } from "./";
-import { LayoutContext } from "../layout";
+import { LayoutContext } from "../layout/layoutContext"; // مسیر صحیح
 
 import { isAuthenticate } from "../auth/fetchApi";
 
-import "./style.css";
+// import "./style.css"; // Assuming styles are handled by Tailwind or global CSS
 
 const Menu = () => {
-  const { data, dispatch } = useContext(ProductDetailsContext);
+  const { data: productData, dispatch } = useContext(ProductDetailsContext);
   const { data: layoutData } = useContext(LayoutContext);
+
+  const activeClasses = "border-b-2 border-[var(--color-accent)] text-[var(--color-accent)]";
+  const inactiveClasses = "text-gray-500 dark:text-gray-400 hover:text-[var(--color-accent)] dark:hover:text-[var(--color-accent)]";
 
   return (
     <Fragment>
-      <div className="flex flex-col md:flex-row items-center justify-center">
-        <div
+      <div className="flex items-center justify-center space-x-6 md:space-x-8 space-x-reverse border-b border-gray-300 dark:border-gray-700 mb-8">
+        <button
           onClick={(e) => dispatch({ type: "menu", payload: true })}
-          className={`${
-            data.menu ? "border-b-2 border-yellow-700" : ""
-          } px-4 py-3 cursor-pointer`}
+          className={`px-4 py-4 text-lg md:text-xl font-semibold focus:outline-none transition-colors duration-200 ${
+            productData.menu ? activeClasses : inactiveClasses
+          }`}
         >
-          Description
-        </div>
-        <div
+          توضیحات محصول
+        </button>
+        <button
           onClick={(e) => dispatch({ type: "menu", payload: false })}
-          className={`${
-            !data.menu ? "border-b-2 border-yellow-700" : ""
-          } px-4 py-3 relative flex cursor-pointer`}
+          className={`px-4 py-4 text-lg md:text-xl font-semibold relative focus:outline-none transition-colors duration-200 ${
+            !productData.menu ? activeClasses : inactiveClasses
+          }`}
         >
-          <span>Reviews</span>
-          <span className="absolute text-xs top-0 right-0 mt-2 bg-yellow-700 text-white rounded px-1">
-            {layoutData.singleProductDetail.pRatingsReviews.length}
-          </span>
-        </div>
+          <span>نظرات کاربران</span>
+          {layoutData.singleProductDetail && layoutData.singleProductDetail.pRatingsReviews && (
+            <span className={`absolute -top-1 -right-3 text-xs bg-[var(--color-accent)] text-white rounded-full px-2 py-0.5 ${productData.menu ? 'opacity-70' : ''}`}>
+              {layoutData.singleProductDetail.pRatingsReviews.length}
+            </span>
+          )}
+        </button>
       </div>
     </Fragment>
   );
@@ -42,51 +48,73 @@ const Menu = () => {
 
 const RatingReview = () => {
   return (
-    <Fragment>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
       <AllReviews />
       {isAuthenticate() ? (
         <ReviewForm />
       ) : (
-        <div className="mb-12 md:mx-16 lg:mx-20 xl:mx-24 bg-red-200 px-4 py-2 rounded mb-4">
-          You need to login in for review
+        <div className="mt-8 p-4 bg-red-100 dark:bg-red-800 dark:bg-opacity-30 text-red-700 dark:text-red-300 rounded-lg text-center">
+          برای ثبت نظر، ابتدا وارد حساب کاربری خود شوید.
         </div>
       )}
-    </Fragment>
+    </motion.div>
   );
 };
 
 const ProductDetailsSectionTwo = (props) => {
-  const { data } = useContext(ProductDetailsContext);
+  const { data: productData } = useContext(ProductDetailsContext);
   const { data: layoutData } = useContext(LayoutContext);
   const [singleProduct, setSingleproduct] = useState({});
 
   useEffect(() => {
     setSingleproduct(
-      layoutData.singleProductDetail ? layoutData.singleProductDetail : ""
+      layoutData.singleProductDetail ? layoutData.singleProductDetail : {}
     );
+  }, [layoutData.singleProductDetail]);
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const contentVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
+  };
 
   return (
     <Fragment>
-      <section className="m-4 md:mx-12 md:my-8">
-        <Menu />
-        {data.menu ? (
-          <div className="mt-6">{singleProduct.pDescription}</div>
-        ) : (
-          <RatingReview />
-        )}
-      </section>
-      <div className="m-4 md:mx-8 md:my-6 flex justify-center capitalize font-light tracking-widest bg-white border-t border-b text-gray-800 px-4 py-4 space-x-4">
-        <div>
-          <span>Category :</span>
-          <span className="text-sm text-gray-600">
-            {" "}
-            {singleProduct.pCategory ? singleProduct.pCategory.cName : ""}
-          </span>
+      <section className="py-12 md:py-16 bg-[var(--color-background)] dark:bg-gray-900 transition-colors duration-300">
+        <div className="container mx-auto px-6 md:px-12">
+          <Menu />
+          <motion.div
+            key={productData.menu ? "description" : "reviews"} // Change key to trigger animation on tab change
+            variants={contentVariants}
+            initial="hidden"
+            animate="visible"
+            className="mt-8 prose prose-lg dark:prose-invert max-w-none leading-relaxed text-right text-[var(--color-text)]"
+          >
+            {productData.menu ? (
+              <div dangerouslySetInnerHTML={{ __html: singleProduct.pDescription?.replace(/\n/g, '<br />') || 'توضیحات محصول به زودی اضافه خواهد شد.' }} />
+            ) : (
+              <RatingReview />
+            )}
+          </motion.div>
         </div>
-      </div>
+      </section>
+      {/* Additional Info Section (Category, Tags etc.) - Can be styled with Neubrutalism */}
+      <section className="py-8 bg-gray-50 dark:bg-gray-800 transition-colors duration-300">
+        <div className="container mx-auto px-6 md:px-12 flex flex-wrap justify-center items-center gap-x-8 gap-y-4 text-sm text-gray-600 dark:text-gray-400">
+          {singleProduct.pCategory && (
+            <div className="flex items-center space-x-2 space-x-reverse neubrutal-border bg-white dark:bg-gray-700 px-4 py-2 rounded-md">
+              <span className="font-semibold">دسته‌بندی:</span>
+              <span>{singleProduct.pCategory.cName}</span>
+            </div>
+          )}
+          {/* Placeholder for tags or other info */}
+          {singleProduct.pTags && singleProduct.pTags.length > 0 && (
+             <div className="flex items-center space-x-2 space-x-reverse neubrutal-border bg-white dark:bg-gray-700 px-4 py-2 rounded-md">
+              <span className="font-semibold">برچسب‌ها:</span>
+              {singleProduct.pTags.map(tag => <span key={tag} className="bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded text-xs">{tag}</span>)}
+            </div>
+          )}
+        </div>
+      </section>
     </Fragment>
   );
 };

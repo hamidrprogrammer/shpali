@@ -10,6 +10,7 @@ import {
   ProductByCategory,
   CheckoutPage,
 } from "./shop";
+import CartPage from "./shop/cart/CartPage"; // ایمپورت صفحه سبد خرید
 import { DashboardAdmin, Categories, Products, Orders } from "./admin";
 import { UserProfile, UserOrders, SettingUser } from "./shop/dashboardUser";
 
@@ -34,6 +35,7 @@ const Routes = (props) => {
           path="/checkout"
           component={CheckoutPage}
         />
+        <Route exact path="/cart" component={CartPage} /> {/* مسیر صفحه سبد خرید */}
         {/* Shop & Public Routes End */}
 
         {/* Admin Routes */}

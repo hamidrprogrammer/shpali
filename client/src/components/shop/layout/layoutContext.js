@@ -9,6 +9,8 @@ export const layoutState = {
   cartTotalCost: null,
   orderSuccess: false,
   loading: false,
+  // وضعیت اولیه تم با بررسی localStorage و prefers-color-scheme
+  isDarkMode: localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches),
 };
 
 export const layoutReducer = (state, action) => {
@@ -62,6 +64,18 @@ export const layoutReducer = (state, action) => {
       return {
         ...state,
         loading: action.payload,
+      };
+    case "toggleTheme":
+      const newIsDarkMode = !state.isDarkMode;
+      localStorage.setItem('theme', newIsDarkMode ? 'dark' : 'light');
+      if (newIsDarkMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      return {
+        ...state,
+        isDarkMode: newIsDarkMode,
       };
     default:
       return state;

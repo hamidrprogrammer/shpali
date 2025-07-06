@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import App from "./App";
+import "./index.css"; // ایمپورت فایل CSS جدید
 import * as serviceWorker from "./serviceWorker";
 import {SnackbarProvider} from 'notistack'
 ReactDOM.render(
